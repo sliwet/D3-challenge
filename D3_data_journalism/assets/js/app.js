@@ -18,16 +18,20 @@ let getLinearScale = (data, chosenAxis) => {
   let rangearr = [0, width];
   if (chosenAxis == chosenYAxis) rangearr = [height, 0];
 
+  let min = d3.min(data, d => d[chosenAxis]);
+  let max = d3.max(data, d => d[chosenAxis]);
+  let padd = (max - min) * 0.1;
+
   let linearScale = d3.scaleLinear()
-    .domain([d3.min(data, d => d[chosenAxis]) * 0.8, d3.max(data, d => d[chosenAxis]) * 1.2])
+    .domain([min - padd, max + padd])
     .range(rangearr);
 
   return linearScale;
 }
 
-let renderAxes = (newScale, newAxis, isY) => {
+let renderAxes = (newScale, newAxis,XorY) => {
   let axis = d3.axisBottom(newScale);
-  if (isY) axis = d3.axisLeft(newScale);
+  if ((XorY == 'y') || (XorY == 'Y')) axis = d3.axisLeft(newScale);
 
   newAxis.transition()
     .duration(1000)
@@ -44,8 +48,6 @@ let renderCircles = (circlesGroup, newScale, chosenAxis) => {
     .attr(attstr, d => newScale(d[chosenAxis]));
   return circlesGroup;
 }
-
-// dkwon
 
 let updateToolTip = (chosenXAxis, circlesGroup) => {
   let label = "";
@@ -70,9 +72,6 @@ let updateToolTip = (chosenXAxis, circlesGroup) => {
   return circlesGroup;
 }
 
-// dkwon
-
-
 d3.csv("assets/data/data.csv").then((data, err) => {
   if (err) throw err;
 
@@ -88,37 +87,60 @@ d3.csv("assets/data/data.csv").then((data, err) => {
     d.healthcareLow = +d.healthcareLow
   });
 
-  let xylabels ={
-    x:[
+  let xvalues = ['poverty', 'age', 'income'];
+  let yvalues = ['obesity', 'smokes', 'healthcareLow'];
+
+  let xylabels = {
+    x: [
       {
-        'x':0,
-        'y':20,
-        'value':'poverty',
-        'classed': 'active',
-        'text':"In Poverty (%)"
+        'x': 0,
+        'y': 20,
+        'value': xvalues[0],
+        'active': true,
+        'inactive': false,
+        'text': "In Poverty (%)"
       },
       {
-        'x':0,
-        'y':40,
-        'value':'age',
-        'classed': 'inactive',
-        'text':"Age (Median)"
+        'x': 0,
+        'y': 40,
+        'value': xvalues[1],
+        'active': false,
+        'inactive': true,
+        'text': "Age (Median)"
       },
       {
-        'x':0,
-        'y':60,
-        'value':'income',
-        'classed': 'inactive',
-        'text':"Household Income (Median)"
+        'x': 0,
+        'y': 60,
+        'value': xvalues[2],
+        'active': false,
+        'inactive': true,
+        'text': "Household Income (Median)"
       }
     ],
-    y:[
+    y: [
       {
-        'y':-margin.left *4/5,
-        'x':-height / 2,
-        'value':'obesity',
-        'classed': 'active',
-        'text':"Obese (%)"
+        'y': -margin.left * 4 / 5,
+        'x': -height / 2,
+        'value': yvalues[0],
+        'active': true,
+        'inactive': false,
+        'text': "Obese (%)"
+      },
+      {
+        'y': -margin.left * 3 / 5,
+        'x': -height / 2,
+        'value': yvalues[1],
+        'active': false,
+        'inactive': true,
+        'text': "Smokes (%)"
+      },
+      {
+        'y': -margin.left * 2 / 5,
+        'x': -height / 2,
+        'value': yvalues[2],
+        'active': false,
+        'inactive': true,
+        'text': "Lacks Healthcare (%)"
       }
     ]
   }
@@ -141,47 +163,33 @@ d3.csv("assets/data/data.csv").then((data, err) => {
 
   let xLabelsGroup = chartGroup.append("g")
     .attr("transform", `translate(${width / 2}, ${height + 20})`);
-
-  
-  
-
-  let hairLengthLabel = xLabelsGroup.append("text")
-    .attr("x", xylabels.x[0].x)
-    .attr("y", xylabels.x[0].y)
-    .attr("value", xylabels.x[0].value) // value to grab for event listener
-    .classed(xylabels.x[0].classed, true)
-    .text(xylabels.x[0].text);
-
-  let albumsLabel = xLabelsGroup.append("text")
-  .attr("x", xylabels.x[1].x)
-  .attr("y", xylabels.x[1].y)
-  .attr("value", xylabels.x[1].value) // value to grab for event listener
-  .classed(xylabels.x[1].classed, true)
-  .text(xylabels.x[1].text);
-
   let yLabelsGroup = chartGroup.append("g")
     .attr("transform", "rotate(-90)")
 
-  let oneYLabel = yLabelsGroup.append("text")
-    .attr("y", -margin.left * 3/4)
-    // .attr("dy", "1em")
-    .attr("x", -height / 2)
-    // .classed("axis-text", true)
-    .attr("value", "obesity") // value to grab for event listener
-    // .attr("value", "hair_length") // value to grab for event listener
-    // .classed("axis-text", true)
-    .classed("active", true)
-    .text("Bfds fad  s dfasdf adsfkajsd;fie");
+  let xlabels = [];
+  let ylabels = [];
 
-  let anotherYLabel = yLabelsGroup.append("text")
-    .attr("y", -margin.left / 2)
-    .attr("dy", "1em")
-    .attr("x", -height / 2)
-    .classed("axis-text", true)
-    // .attr("value", "hair_length") // value to grab for event listener
-    .classed("axis-text", true)
-    .classed("inactive", true)
-    .text("Number of Billboard 500 Hits");
+  xylabels.x.forEach(d => {
+    let onelabel = xLabelsGroup.append("text")
+      .attr("x", d.x)
+      .attr("y", d.y)
+      .attr("value", d.value)
+      .classed("active", d.active)
+      .classed("inactive", d.inactive)
+      .text(d.text);
+    xlabels.push(onelabel);
+  });
+
+  xylabels.y.forEach(d => {
+    let onelabel = yLabelsGroup.append("text")
+      .attr("y", d.y)
+      .attr("x", d.x)
+      .attr("value", d.value)
+      .classed("active", d.active)
+      .classed("inactive", d.inactive)
+      .text(d.text);
+    ylabels.push(onelabel);
+  });
 
   // Plotting data  =================
 
@@ -201,31 +209,43 @@ d3.csv("assets/data/data.csv").then((data, err) => {
     .on("click", () => {
       let value = d3.select(d3.event.target).attr("value");
       if (value !== chosenXAxis) {
+        let i = xvalues.indexOf(chosenXAxis);
+        xlabels[i]
+          .classed("active", false)
+          .classed("inactive", true);
+
         chosenXAxis = value;
         xLinearScale = getLinearScale(data, chosenXAxis);
-        // updates x axis with transition
-        xAxis = renderAxes(xLinearScale,xAxis,false);
-        // updates circles with new x values
+        xAxis = renderAxes(xLinearScale, xAxis, 'x');
         circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
-        // updates tooltips with new info
         circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
-        // changes classes to change bold text
-        if (chosenXAxis === "age") {
-          albumsLabel
-            .classed("active", true)
-            .classed("inactive", false);
-          hairLengthLabel
-            .classed("active", false)
-            .classed("inactive", true);
-        }
-        else {
-          albumsLabel
-            .classed("active", false)
-            .classed("inactive", true);
-          hairLengthLabel
-            .classed("active", true)
-            .classed("inactive", false);
-        }
+
+        i = xvalues.indexOf(chosenXAxis);
+        xlabels[i]
+          .classed("active", true)
+          .classed("inactive", false);
+      }
+    });
+
+  yLabelsGroup.selectAll("text")
+    .on("click", () => {
+      let value = d3.select(d3.event.target).attr("value");
+      if (value !== chosenYAxis) {
+        let i = yvalues.indexOf(chosenYAxis);
+        ylabels[i]
+          .classed("active", false)
+          .classed("inactive", true);
+
+        chosenYAxis = value;
+        yLinearScale = getLinearScale(data, chosenYAxis);
+        yAxis = renderAxes(yLinearScale, yAxis, 'y');
+        circlesGroup = renderCircles(circlesGroup, yLinearScale, chosenYAxis);
+        circlesGroup = updateToolTip(chosenYAxis, circlesGroup);
+
+        i = yvalues.indexOf(chosenYAxis);
+        ylabels[i]
+          .classed("active", true)
+          .classed("inactive", false);
       }
     });
 }).catch(error => {
