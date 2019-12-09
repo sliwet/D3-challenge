@@ -73,23 +73,60 @@ let updateToolTip = (chosenXAxis, circlesGroup) => {
 // dkwon
 
 
-d3.csv("assets/data/data.csv").then((hairData, err) => {
+d3.csv("assets/data/data.csv").then((data, err) => {
   if (err) throw err;
 
   // Data =========================
-  hairData.forEach(data => {
-    data.poverty = +data.poverty;
-    data.age = +data.age;
-    data.income = +data.income
-    data.obesity = +data.obesity
-    data.smokes = +data.smokes;
-    data.healthcareLow = +data.healthcareLow
+  data.forEach(d => {
+    // X-axis
+    d.poverty = +d.poverty;
+    d.age = +d.age;
+    d.income = +d.income
+    // Y-axis
+    d.obesity = +d.obesity
+    d.smokes = +d.smokes;
+    d.healthcareLow = +d.healthcareLow
   });
+
+  let xylabels ={
+    x:[
+      {
+        'x':0,
+        'y':20,
+        'value':'poverty',
+        'classed': 'active',
+        'text':"In Poverty (%)"
+      },
+      {
+        'x':0,
+        'y':40,
+        'value':'age',
+        'classed': 'inactive',
+        'text':"Age (Median)"
+      },
+      {
+        'x':0,
+        'y':60,
+        'value':'income',
+        'classed': 'inactive',
+        'text':"Household Income (Median)"
+      }
+    ],
+    y:[
+      {
+        'y':-margin.left *4/5,
+        'x':-height / 2,
+        'value':'obesity',
+        'classed': 'active',
+        'text':"Obese (%)"
+      }
+    ]
+  }
 
   // X and Y axis =================
 
-  let xLinearScale = getLinearScale(hairData, chosenXAxis);
-  let yLinearScale = getLinearScale(hairData, chosenYAxis);
+  let xLinearScale = getLinearScale(data, chosenXAxis);
+  let yLinearScale = getLinearScale(data, chosenYAxis);
 
   let xAxis = chartGroup.append("g")
     .classed("x-axis", true)
@@ -105,32 +142,36 @@ d3.csv("assets/data/data.csv").then((hairData, err) => {
   let xLabelsGroup = chartGroup.append("g")
     .attr("transform", `translate(${width / 2}, ${height + 20})`);
 
+  
+  
+
   let hairLengthLabel = xLabelsGroup.append("text")
-    .attr("x", 0)
-    .attr("y", 20)
-    .attr("value", "poverty") // value to grab for event listener
-    .classed("active", true)
-    .text("Hair Metal Ban Hair Length (inches)");
+    .attr("x", xylabels.x[0].x)
+    .attr("y", xylabels.x[0].y)
+    .attr("value", xylabels.x[0].value) // value to grab for event listener
+    .classed(xylabels.x[0].classed, true)
+    .text(xylabels.x[0].text);
 
   let albumsLabel = xLabelsGroup.append("text")
-    .attr("x", 0)
-    .attr("y", 40)
-    .attr("value", "age") // value to grab for event listener
-    .classed("inactive", true)
-    .text("# of Albums Released");
+  .attr("x", xylabels.x[1].x)
+  .attr("y", xylabels.x[1].y)
+  .attr("value", xylabels.x[1].value) // value to grab for event listener
+  .classed(xylabels.x[1].classed, true)
+  .text(xylabels.x[1].text);
 
   let yLabelsGroup = chartGroup.append("g")
     .attr("transform", "rotate(-90)")
 
   let oneYLabel = yLabelsGroup.append("text")
-    .attr("y", -margin.left)
-    .attr("dy", "1em")
+    .attr("y", -margin.left * 3/4)
+    // .attr("dy", "1em")
     .attr("x", -height / 2)
-    .classed("axis-text", true)
+    // .classed("axis-text", true)
+    .attr("value", "obesity") // value to grab for event listener
     // .attr("value", "hair_length") // value to grab for event listener
-    .classed("axis-text", true)
+    // .classed("axis-text", true)
     .classed("active", true)
-    .text("Number of Billboard 500 Hits");
+    .text("Bfds fad  s dfasdf adsfkajsd;fie");
 
   let anotherYLabel = yLabelsGroup.append("text")
     .attr("y", -margin.left / 2)
@@ -145,7 +186,7 @@ d3.csv("assets/data/data.csv").then((hairData, err) => {
   // Plotting data  =================
 
   let circlesGroup = chartGroup.selectAll("circle")
-    .data(hairData)
+    .data(data)
     .enter()
     .append("circle")
     .attr("cx", d => xLinearScale(d[chosenXAxis]))
@@ -161,9 +202,9 @@ d3.csv("assets/data/data.csv").then((hairData, err) => {
       let value = d3.select(d3.event.target).attr("value");
       if (value !== chosenXAxis) {
         chosenXAxis = value;
-        xLinearScale = getLinearScale(hairData, chosenXAxis);
+        xLinearScale = getLinearScale(data, chosenXAxis);
         // updates x axis with transition
-        xAxis = renderAxes(xLinearScale, xAxis,false);
+        xAxis = renderAxes(xLinearScale,xAxis,false);
         // updates circles with new x values
         circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
         // updates tooltips with new info
