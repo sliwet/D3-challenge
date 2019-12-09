@@ -42,8 +42,8 @@ let renderCircles = (circlesGroup, newXScale, chosenXaxis) => {
 
 let updateToolTip = (chosenXAxis, circlesGroup) => {
   let label = "";
-  if (chosenXAxis === "hair_length") {
-    label = "Hair Length:";
+  if (chosenXAxis === "poverty") {
+    label = "Poverty:";
   }
   else {
     label = "# of Albums:";
@@ -63,17 +63,17 @@ let updateToolTip = (chosenXAxis, circlesGroup) => {
   return circlesGroup;
 }
 
-let chosenXAxis = "hair_length";
-let chosenYAxis = "num_hits";
+let chosenXAxis = "poverty";
+let chosenYAxis = "obesity";
 
-d3.csv("hairdata.csv").then((hairData, err) => {
+d3.csv("assets/data/data.csv").then((hairData, err) => {
   if (err) throw err;
 
   // Data =========================
 
   hairData.forEach(data => {
-    data.hair_length = +data.hair_length;
-    data.num_hits = +data.num_hits;
+    data.poverty = +data.poverty;
+    data.obesity = +data.obesity;
     data.num_albums = +data.num_albums;
   });
 
@@ -102,7 +102,7 @@ d3.csv("hairdata.csv").then((hairData, err) => {
   let hairLengthLabel = xLabelsGroup.append("text")
     .attr("x", 0)
     .attr("y", 20)
-    .attr("value", "hair_length") // value to grab for event listener
+    .attr("value", "poverty") // value to grab for event listener
     .classed("active", true)
     .text("Hair Metal Ban Hair Length (inches)");
 
@@ -154,10 +154,7 @@ d3.csv("hairdata.csv").then((hairData, err) => {
     .on("click", () => {
       let value = d3.select(d3.event.target).attr("value");
       if (value !== chosenXAxis) {
-        // replaces chosenXAxis with value
         chosenXAxis = value;
-        // functions here found above csv import
-        // updates x scale for new data
         xLinearScale = xScale(hairData, chosenXAxis);
         // updates x axis with transition
         xAxis = renderAxes(xLinearScale, xAxis);
