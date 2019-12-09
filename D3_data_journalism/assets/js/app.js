@@ -7,38 +7,45 @@ let height = svgHeight - margin.top - margin.bottom;
 let svg = d3.select("#scatter").append("svg").attr("width", svgWidth).attr("height", svgHeight);
 let chartGroup = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+// Default selection
+
+let chosenXAxis = "poverty";
+let chosenYAxis = "obesity";
+
 // Functions
 
-let xScale = (hairData, chosenXAxis) => {
-  let xLinearScale = d3.scaleLinear()
-    .domain([d3.min(hairData, d => d[chosenXAxis]) * 0.8, d3.max(hairData, d => d[chosenXAxis]) * 1.2])
-    .range([0, width]);
+let getLinearScale = (data, chosenAxis) => {
+  let rangearr = [0, width];
+  if (chosenAxis == chosenYAxis) rangearr = [height, 0];
 
-  return xLinearScale;
+  let linearScale = d3.scaleLinear()
+    .domain([d3.min(data, d => d[chosenAxis]) * 0.8, d3.max(data, d => d[chosenAxis]) * 1.2])
+    .range(rangearr);
+
+  return linearScale;
 }
 
-let yScale = (hairData, chosenYAxis) => {
-  let yLinearScale = d3.scaleLinear()
-    .domain([0, d3.max(hairData, d => d[chosenYAxis])])
-    .range([height, 0]);
+let renderAxes = (newScale, newAxis, isY) => {
+  let axis = d3.axisBottom(newScale);
+  if (isY) axis = d3.axisLeft(newScale);
 
-  return yLinearScale;
-}
-
-let renderAxes = (newXScale, xAxis) => {
-  let bottomAxis = d3.axisBottom(newXScale);
-  xAxis.transition()
+  newAxis.transition()
     .duration(1000)
-    .call(bottomAxis);
-  return xAxis;
+    .call(axis);
+  return newAxis;
 }
 
-let renderCircles = (circlesGroup, newXScale, chosenXaxis) => {
+let renderCircles = (circlesGroup, newScale, chosenAxis) => {
+  let attstr = "cx";
+  if (chosenAxis == chosenYAxis) attstr = "cy";
+
   circlesGroup.transition()
     .duration(1000)
-    .attr("cx", d => newXScale(d[chosenXAxis]));
+    .attr(attstr, d => newScale(d[chosenAxis]));
   return circlesGroup;
 }
+
+// dkwon
 
 let updateToolTip = (chosenXAxis, circlesGroup) => {
   let label = "";
@@ -63,36 +70,35 @@ let updateToolTip = (chosenXAxis, circlesGroup) => {
   return circlesGroup;
 }
 
-let chosenXAxis = "poverty";
-let chosenYAxis = "obesity";
+// dkwon
+
 
 d3.csv("assets/data/data.csv").then((hairData, err) => {
   if (err) throw err;
 
   // Data =========================
-
   hairData.forEach(data => {
     data.poverty = +data.poverty;
-    data.obesity = +data.obesity;
-    data.num_albums = +data.num_albums;
+    data.age = +data.age;
+    data.income = +data.income
+    data.obesity = +data.obesity
+    data.smokes = +data.smokes;
+    data.healthcareLow = +data.healthcareLow
   });
 
   // X and Y axis =================
 
-  let xLinearScale = xScale(hairData, chosenXAxis);
-  let yLinearScale = yScale(hairData, chosenYAxis);
-
-  let bottomAxis = d3.axisBottom(xLinearScale);
-  let leftAxis = d3.axisLeft(yLinearScale);
+  let xLinearScale = getLinearScale(hairData, chosenXAxis);
+  let yLinearScale = getLinearScale(hairData, chosenYAxis);
 
   let xAxis = chartGroup.append("g")
     .classed("x-axis", true)
     .attr("transform", `translate(0, ${height})`)
-    .call(bottomAxis);
+    .call(d3.axisBottom(xLinearScale));
 
   let yAxis = chartGroup.append("g")
     .classed("y-axis", true)
-    .call(leftAxis);
+    .call(d3.axisLeft(yLinearScale));
 
   // Labels for X and Y axis  =================
 
@@ -109,7 +115,7 @@ d3.csv("assets/data/data.csv").then((hairData, err) => {
   let albumsLabel = xLabelsGroup.append("text")
     .attr("x", 0)
     .attr("y", 40)
-    .attr("value", "num_albums") // value to grab for event listener
+    .attr("value", "age") // value to grab for event listener
     .classed("inactive", true)
     .text("# of Albums Released");
 
@@ -155,15 +161,15 @@ d3.csv("assets/data/data.csv").then((hairData, err) => {
       let value = d3.select(d3.event.target).attr("value");
       if (value !== chosenXAxis) {
         chosenXAxis = value;
-        xLinearScale = xScale(hairData, chosenXAxis);
+        xLinearScale = getLinearScale(hairData, chosenXAxis);
         // updates x axis with transition
-        xAxis = renderAxes(xLinearScale, xAxis);
+        xAxis = renderAxes(xLinearScale, xAxis,false);
         // updates circles with new x values
         circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
         // updates tooltips with new info
         circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
         // changes classes to change bold text
-        if (chosenXAxis === "num_albums") {
+        if (chosenXAxis === "age") {
           albumsLabel
             .classed("active", true)
             .classed("inactive", false);
