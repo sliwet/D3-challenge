@@ -209,7 +209,7 @@ d3.csv("assets/data/data.csv").then((data, err) => {
 
   circlesGroup = updateToolTip(circlesGroup);
 
-  let abbrGroup = chartGroup.selectAll("textincircles")
+  let abbrGroup = chartGroup.selectAll("text.stateText")
     .data(data)
     .enter()
     .append("text")
