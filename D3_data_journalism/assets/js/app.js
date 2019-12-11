@@ -144,7 +144,7 @@ let setLabels = (labelsGroup, d, labels) => {
   labels.push(onelabel);
 }
 
-let onClickLabel = (trgt, data, XorY, labels, axis, circlesGroup, abbrGroup) => {
+let handleOnClickLabel = (trgt, data, XorY, labels, axis, circlesGroup, abbrGroup) => {
   let chosenAxis = d3.select(trgt).attr("value");
   let values;
   let previous;
@@ -259,12 +259,12 @@ d3.csv("assets/data/data.csv").then((data, err) => {
 
   xLabelsGroup.selectAll("text")
     .on("click", () => {
-      onClickLabel(d3.event.target, data, 'x', xlabels, xAxis, circlesGroup, abbrGroup);
+      handleOnClickLabel(d3.event.target, data, 'x', xlabels, xAxis, circlesGroup, abbrGroup);
     });
 
   yLabelsGroup.selectAll("text")
     .on("click", () => {
-      onClickLabel(d3.event.target, data, 'y', ylabels, yAxis, circlesGroup, abbrGroup);
+      handleOnClickLabel(d3.event.target, data, 'y', ylabels, yAxis, circlesGroup, abbrGroup);
     });
 }).catch(error => {
   console.log(error);
