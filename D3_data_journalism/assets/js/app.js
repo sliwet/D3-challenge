@@ -134,7 +134,19 @@ let renderAbbr = (abbrGroup, newScale, chosenAxis) => {
   return abbrGroup;
 }
 
-let onClickLabel = (data, XorY, chosenAxis, labels, axis, circlesGroup, abbrGroup) => {
+let setLabels = (labelsGroup, d, labels) => {
+  let onelabel = labelsGroup.append("text")
+    .attr("x", d.x)
+    .attr("y", d.y)
+    .attr("value", d.value)
+    .classed("active", d.active)
+    .classed("inactive", d.inactive)
+    .text(d.text);
+  labels.push(onelabel);
+}
+
+let onClickLabel = (trgt, data, XorY, labels, axis, circlesGroup, abbrGroup) => {
+  let chosenAxis = d3.select(trgt).attr("value");
   let values;
   let previous;
 
@@ -147,33 +159,35 @@ let onClickLabel = (data, XorY, chosenAxis, labels, axis, circlesGroup, abbrGrou
     previous = chosenYAxis;
   }
 
-  try {
-    let i = values.indexOf(previous);
+  if (chosenAxis !== previous) {
+    try {
+      let i = values.indexOf(previous);
+      labels[i]
+        .classed("active", false)
+        .classed("inactive", true);
+
+      if (XorY == 'x') {
+        chosenXAxis = chosenAxis;
+      }
+      else {
+        chosenYAxis = chosenAxis;
+      }
+    }
+    catch (error) {
+      return;
+    }
+
+    linearScale = getLinearScale(data, chosenAxis);
+    axis = renderAxes(linearScale, axis, XorY);
+    circlesGroup = renderCircles(circlesGroup, linearScale, chosenAxis);
+    circlesGroup = updateToolTip(circlesGroup);
+    abbrGroup = renderAbbr(abbrGroup, linearScale, chosenAxis);
+
+    i = values.indexOf(chosenAxis);
     labels[i]
-      .classed("active", false)
-      .classed("inactive", true);
-
-    if (XorY == 'x') {
-      chosenXAxis = chosenAxis;
-    }
-    else {
-      chosenYAxis = chosenAxis;
-    }
+      .classed("active", true)
+      .classed("inactive", false);
   }
-  catch (error) {
-    return;
-  }
-
-  linearScale = getLinearScale(data, chosenAxis);
-  axis = renderAxes(linearScale, axis, XorY);
-  circlesGroup = renderCircles(circlesGroup, linearScale, chosenAxis);
-  circlesGroup = updateToolTip(circlesGroup);
-  abbrGroup = renderAbbr(abbrGroup, linearScale, chosenAxis);
-
-  i = values.indexOf(chosenAxis);
-  labels[i]
-    .classed("active", true)
-    .classed("inactive", false);
 }
 
 d3.csv("assets/data/data.csv").then((data, err) => {
@@ -215,27 +229,8 @@ d3.csv("assets/data/data.csv").then((data, err) => {
   let xlabels = [];
   let ylabels = [];
 
-  xylabels.x.forEach(d => {
-    let onelabel = xLabelsGroup.append("text")
-      .attr("x", d.x)
-      .attr("y", d.y)
-      .attr("value", d.value)
-      .classed("active", d.active)
-      .classed("inactive", d.inactive)
-      .text(d.text);
-    xlabels.push(onelabel);
-  });
-
-  xylabels.y.forEach(d => {
-    let onelabel = yLabelsGroup.append("text")
-      .attr("y", d.y)
-      .attr("x", d.x)
-      .attr("value", d.value)
-      .classed("active", d.active)
-      .classed("inactive", d.inactive)
-      .text(d.text);
-    ylabels.push(onelabel);
-  });
+  xylabels.x.forEach(d => setLabels(xLabelsGroup, d, xlabels));
+  xylabels.y.forEach(d => setLabels(yLabelsGroup, d, ylabels));
 
   // Plotting data  =================
 
@@ -261,20 +256,16 @@ d3.csv("assets/data/data.csv").then((data, err) => {
     .attr("y", d => yLinearScale(d[chosenYAxis]))
     .attr("dy", 5);
 
+  // Event handling ===================
+
   xLabelsGroup.selectAll("text")
     .on("click", () => {
-      let value = d3.select(d3.event.target).attr("value");
-      if (value !== chosenXAxis) {
-        onClickLabel(data,'x', value, xlabels, xAxis, circlesGroup, abbrGroup);
-      }
+      onClickLabel(d3.event.target, data, 'x', xlabels, xAxis, circlesGroup, abbrGroup);
     });
 
   yLabelsGroup.selectAll("text")
     .on("click", () => {
-      let value = d3.select(d3.event.target).attr("value");
-      if (value !== chosenYAxis) {
-        onClickLabel(data,'y', value, ylabels, yAxis, circlesGroup, abbrGroup);
-      }
+      onClickLabel(d3.event.target, data, 'y', ylabels, yAxis, circlesGroup, abbrGroup);
     });
 }).catch(error => {
   console.log(error);
