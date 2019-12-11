@@ -86,7 +86,7 @@ let getLinearScale = (data, chosenAxis) => {
 
 let renderAxes = (newScale, newAxis, XorY) => {
   let axis = d3.axisBottom(newScale);
-  if ((XorY == 'y') || (XorY == 'Y')) axis = d3.axisLeft(newScale);
+  if (XorY == 'y') axis = d3.axisLeft(newScale);
 
   newAxis.transition()
     .duration(1000)
@@ -171,21 +171,21 @@ let onClickLabel = (trgt, data, XorY, labels, axis, circlesGroup, abbrGroup) => 
       else {
         chosenYAxis = chosenAxis;
       }
+
+      linearScale = getLinearScale(data, chosenAxis);
+      axis = renderAxes(linearScale, axis, XorY);
+      circlesGroup = renderCircles(circlesGroup, linearScale, chosenAxis);
+      circlesGroup = updateToolTip(circlesGroup);
+      abbrGroup = renderAbbr(abbrGroup, linearScale, chosenAxis);
+
+      i = values.indexOf(chosenAxis);
+      labels[i]
+        .classed("active", true)
+        .classed("inactive", false);
     }
     catch (error) {
       return;
     }
-
-    linearScale = getLinearScale(data, chosenAxis);
-    axis = renderAxes(linearScale, axis, XorY);
-    circlesGroup = renderCircles(circlesGroup, linearScale, chosenAxis);
-    circlesGroup = updateToolTip(circlesGroup);
-    abbrGroup = renderAbbr(abbrGroup, linearScale, chosenAxis);
-
-    i = values.indexOf(chosenAxis);
-    labels[i]
-      .classed("active", true)
-      .classed("inactive", false);
   }
 }
 
