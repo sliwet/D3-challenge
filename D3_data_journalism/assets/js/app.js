@@ -7,66 +7,65 @@ let height = svgHeight - margin.top - margin.bottom;
 let svg = d3.select("#scatter").append("svg").attr("width", svgWidth).attr("height", svgHeight);
 let chartGroup = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-let xvalues = ['poverty', 'age', 'income'];
-let yvalues = ['obesity', 'smokes', 'healthcare'];
+let xlabelconf = [
+  {
+    'x': 0,
+    'y': 20,
+    'value': 'poverty',
+    'active': true,
+    'inactive': false,
+    'text': "In Poverty (%)"
+  },
+  {
+    'x': 0,
+    'y': 40,
+    'value': 'age',
+    'active': false,
+    'inactive': true,
+    'text': "Age (Median)"
+  },
+  {
+    'x': 0,
+    'y': 60,
+    'value': 'income',
+    'active': false,
+    'inactive': true,
+    'text': "Household Income (Median)"
+  }
+];
 
+let ylabelconf = [
+  {
+    'y': -margin.left * 4 / 5, // horizontal position
+    'x': -height / 2,          // vertical position
+    'value': 'obesity',
+    'active': true,
+    'inactive': false,
+    'text': "Obese (%)"
+  },
+  {
+    'y': -margin.left * 3 / 5,
+    'x': -height / 2,
+    'value': 'smokes',
+    'active': false,
+    'inactive': true,
+    'text': "Smokes (%)"
+  },
+  {
+    'y': -margin.left * 2 / 5,
+    'x': -height / 2,
+    'value': 'healthcare',
+    'active': false,
+    'inactive': true,
+    'text': "Lacks Healthcare (%)"
+  }
+];
+
+let xvalues = xlabelconf.map(d => d.value);
+let yvalues = ylabelconf.map(d => d.value);
+// Default choice
 let chosenXAxis = xvalues[0];
 let chosenYAxis = yvalues[0];
-
-let xylabels = {
-  x: [
-    {
-      'x': 0,
-      'y': 20,
-      'value': xvalues[0],
-      'active': true,
-      'inactive': false,
-      'text': "In Poverty (%)"
-    },
-    {
-      'x': 0,
-      'y': 40,
-      'value': xvalues[1],
-      'active': false,
-      'inactive': true,
-      'text': "Age (Median)"
-    },
-    {
-      'x': 0,
-      'y': 60,
-      'value': xvalues[2],
-      'active': false,
-      'inactive': true,
-      'text': "Household Income (Median)"
-    }
-  ],
-  y: [
-    {
-      'y': -margin.left * 4 / 5, // horizontal position
-      'x': -height / 2,          // vertical position
-      'value': yvalues[0],
-      'active': true,
-      'inactive': false,
-      'text': "Obese (%)"
-    },
-    {
-      'y': -margin.left * 3 / 5,
-      'x': -height / 2,
-      'value': yvalues[1],
-      'active': false,
-      'inactive': true,
-      'text': "Smokes (%)"
-    },
-    {
-      'y': -margin.left * 2 / 5,
-      'x': -height / 2,
-      'value': yvalues[2],
-      'active': false,
-      'inactive': true,
-      'text': "Lacks Healthcare (%)"
-    }
-  ]
-}
 
 // Functions
 
@@ -229,8 +228,8 @@ d3.csv("assets/data/data.csv").then((data, err) => {
   let xlabels = [];
   let ylabels = [];
 
-  xylabels.x.forEach(d => setLabels(xLabelsGroup, d, xlabels));
-  xylabels.y.forEach(d => setLabels(yLabelsGroup, d, ylabels));
+  xlabelconf.forEach(d => setLabels(xLabelsGroup, d, xlabels));
+  ylabelconf.forEach(d => setLabels(yLabelsGroup, d, ylabels));
 
   // Plotting data  =================
 
