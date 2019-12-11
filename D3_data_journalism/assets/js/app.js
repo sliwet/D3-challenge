@@ -134,6 +134,48 @@ let renderAbbr = (abbrGroup, newScale, chosenAxis) => {
   return abbrGroup;
 }
 
+let onClickLabel = (data, XorY, chosenAxis, labels, axis, circlesGroup, abbrGroup) => {
+  let values;
+  let previous;
+
+  if (XorY == 'x') {
+    values = xvalues;
+    previous = chosenXAxis;
+  }
+  else {
+    values = yvalues;
+    previous = chosenYAxis;
+  }
+
+  try {
+    let i = values.indexOf(previous);
+    labels[i]
+      .classed("active", false)
+      .classed("inactive", true);
+
+    if (XorY == 'x') {
+      chosenXAxis = chosenAxis;
+    }
+    else {
+      chosenYAxis = chosenAxis;
+    }
+  }
+  catch (error) {
+    return;
+  }
+
+  linearScale = getLinearScale(data, chosenAxis);
+  axis = renderAxes(linearScale, axis, XorY);
+  circlesGroup = renderCircles(circlesGroup, linearScale, chosenAxis);
+  circlesGroup = updateToolTip(circlesGroup);
+  abbrGroup = renderAbbr(abbrGroup, linearScale, chosenAxis);
+
+  i = values.indexOf(chosenAxis);
+  labels[i]
+    .classed("active", true)
+    .classed("inactive", false);
+}
+
 d3.csv("assets/data/data.csv").then((data, err) => {
   if (err) throw err;
 
@@ -223,22 +265,7 @@ d3.csv("assets/data/data.csv").then((data, err) => {
     .on("click", () => {
       let value = d3.select(d3.event.target).attr("value");
       if (value !== chosenXAxis) {
-        let i = xvalues.indexOf(chosenXAxis);
-        xlabels[i]
-          .classed("active", false)
-          .classed("inactive", true);
-
-        chosenXAxis = value;
-        xLinearScale = getLinearScale(data, chosenXAxis);
-        xAxis = renderAxes(xLinearScale, xAxis, 'x');
-        circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
-        circlesGroup = updateToolTip(circlesGroup);
-        abbrGroup = renderAbbr(abbrGroup, xLinearScale, chosenXAxis);
-
-        i = xvalues.indexOf(chosenXAxis);
-        xlabels[i]
-          .classed("active", true)
-          .classed("inactive", false);
+        onClickLabel(data,'x', value, xlabels, xAxis, circlesGroup, abbrGroup);
       }
     });
 
@@ -246,22 +273,7 @@ d3.csv("assets/data/data.csv").then((data, err) => {
     .on("click", () => {
       let value = d3.select(d3.event.target).attr("value");
       if (value !== chosenYAxis) {
-        let i = yvalues.indexOf(chosenYAxis);
-        ylabels[i]
-          .classed("active", false)
-          .classed("inactive", true);
-
-        chosenYAxis = value;
-        yLinearScale = getLinearScale(data, chosenYAxis);
-        yAxis = renderAxes(yLinearScale, yAxis, 'y');
-        circlesGroup = renderCircles(circlesGroup, yLinearScale, chosenYAxis);
-        circlesGroup = updateToolTip(circlesGroup);
-        abbrGroup = renderAbbr(abbrGroup, yLinearScale, chosenYAxis);
-
-        i = yvalues.indexOf(chosenYAxis);
-        ylabels[i]
-          .classed("active", true)
-          .classed("inactive", false);
+        onClickLabel(data,'y', value, ylabels, yAxis, circlesGroup, abbrGroup);
       }
     });
 }).catch(error => {
